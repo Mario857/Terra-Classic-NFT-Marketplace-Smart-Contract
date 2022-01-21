@@ -29,11 +29,11 @@ Withdraws an NFT token offering from the global offerings list and returns the N
 
 ```shell
 # Execute withdraw_nft action to withdraw the token with the specified offering_id from the marketplace
-wasmcli tx wasm execute <MARKETPLACE_CONTRACT_ADDR> '{
+terrad tx wasm execute <MARKETPLACE_CONTRACT_ADDR> '{
   "withdraw_nft": {
     "offering_id": "<INSERT_OFFERING_ID>"
   }
-}' --gas-prices="0.025ucosm" --gas="auto" --gas-adjustment="1.2" -y --from client
+}' --from test1 --gas="auto" --gas=auto --fees=50000uluna --broadcast-mode=block --chain-id=localterra
 ```
 
 ### Buy CW721 Token
@@ -86,5 +86,5 @@ terrad tx wasm store ./artifacts/cw_marketplace-aarch64.wasm --from test1 --chai
 ```shell
 # Instantiate contract
 
-terrad tx wasm instantiate 1 '{"name":"Special Marketplace"}' --from test1 --chain-id=localterra --fees=50000uluna --gas=auto --broadcast-mode=block
+terrad tx wasm instantiate 1 '{"name":"<MARKETPLACE_NAME>"}' --from test1 --chain-id=localterra --fees=50000uluna --gas=auto --broadcast-mode=block
 ```
