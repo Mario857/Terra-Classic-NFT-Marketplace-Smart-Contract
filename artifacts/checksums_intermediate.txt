@@ -1,0 +1,1 @@
+bbb8301744bd248e17dde05a55d34d0814ce6b08b78062a05579add93134875e  ./target/wasm32-unknown-unknown/release/cw_marketplace.wasm
