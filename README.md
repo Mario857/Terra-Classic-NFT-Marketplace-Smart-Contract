@@ -64,9 +64,9 @@ terrad tx wasm execute terra1ulgw0td86nvs4wtpsc80thv6xelk76ut7a7apj '{
 ### Query Offerings
 
 ```shell
-# Lists offerings sorted by lowest price, sort_listing can be one of following values (price_lowest, price_highest, newest_listed, oldest_listed)
+# Lists offerings sorted by lowest price, sort_listing can be one of following values (price_lowest, price_highest, newest_listed, oldest_listed), index > size (next chunk) size is defined as max chunk size
 
-terrad query wasm contract-store <MARKETPLACE_CONTRACT_ADDR> '{"get_offerings":{"sort_listing":"price_lowest"}}' --chain-id=localterra
+terrad query wasm contract-store <MARKETPLACE_CONTRACT_ADDR> '{"get_offerings":{"sort_listing":"price_lowest", "index": 0, "size": 5 }}' --chain-id=localterra
 ```
 
 ###

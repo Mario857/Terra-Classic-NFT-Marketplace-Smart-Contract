@@ -3,14 +3,32 @@
   "title": "OfferingsResponse",
   "type": "object",
   "required": [
-    "offerings"
+    "index",
+    "offerings",
+    "size",
+    "total"
   ],
   "properties": {
+    "index": {
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0.0
+    },
     "offerings": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/QueryOfferingsResult"
       }
+    },
+    "size": {
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0.0
+    },
+    "total": {
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0.0
     }
   },
   "definitions": {

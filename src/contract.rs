@@ -4,8 +4,8 @@ use std::str::from_utf8;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_binary, to_binary, Api, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo,
-    Order, Pair, Response, StdError, StdResult, WasmMsg,
+    from_binary, to_binary, Api, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Pair,
+    Response, StdError, StdResult, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
@@ -13,7 +13,7 @@ use cw721::{Cw721ExecuteMsg, Cw721ReceiveMsg};
 
 use crate::error::ContractError;
 use crate::msg::{BuyNft, ExecuteMsg, InstantiateMsg, QueryMsg, SellNft};
-use crate::package::{ContractInfoResponse, OfferingsResponse, QueryOfferingsResult};
+use crate::package::{ContractInfoResponse, OfferingsResponse, Paged, QueryOfferingsResult};
 use crate::state::{increment_offerings, Offering, CONTRACT_INFO, OFFERINGS};
 
 // version info for migration info
@@ -182,23 +182,42 @@ pub fn try_withdraw(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetOfferings { sort_listing } => {
-            to_binary(&query_offerings(deps, &sort_listing)?)
-        }
+        QueryMsg::GetOfferings {
+            sort_listing,
+            index,
+            size,
+        } => to_binary(&query_offerings(deps, &sort_listing, index, size)?),
     }
 }
 
-fn query_offerings(deps: Deps, sort_listing: &str) -> StdResult<OfferingsResponse> {
+fn query_offerings(
+    deps: Deps,
+    sort_listing: &str,
+    q_index: Uint128,
+    q_size: Uint128,
+) -> StdResult<OfferingsResponse> {
+    let res: StdResult<Vec<QueryOfferingsResult>> = OFFERINGS
+        .range(deps.storage, None, None, Order::Ascending)
+        .map(|kv_item| parse_offering(deps.api, kv_item))
+        .collect();
+
+    let mut offerings_clone = res?.clone();
+
+    let index = q_index.u128() as usize;
+    let size = q_size.u128() as usize;
+
+    if offerings_clone.len() == 0 {
+        return Ok(OfferingsResponse {
+            total: offerings_clone.len(),
+            size: size,
+            index: index,
+            offerings: offerings_clone,
+        });
+    }
+
     match sort_listing {
         "price_lowest" => {
-            let res: StdResult<Vec<QueryOfferingsResult>> = OFFERINGS
-                .range(deps.storage, None, None, Order::Ascending)
-                .map(|kv_item| parse_offering(deps.api, kv_item))
-                .collect();
-
-            let mut res_sorted = res?.clone();
-
-            res_sorted.sort_by(|a, b| {
+            offerings_clone.sort_by(|a, b| {
                 if a.list_price.amount < b.list_price.amount {
                     Ordering::Less
                 } else if a.list_price.amount == b.list_price.amount {
@@ -207,19 +226,19 @@ fn query_offerings(deps: Deps, sort_listing: &str) -> StdResult<OfferingsRespons
                     Ordering::Greater
                 }
             });
+
+            let paged = Paged::new(&offerings_clone, size);
+            let (_, offerings_paginated) = paged.page(index).unwrap();
+
             Ok(OfferingsResponse {
-                offerings: res_sorted, // Placeholder
+                total: offerings_clone.len(),
+                size: size,
+                index: index,
+                offerings: offerings_paginated.to_vec(),
             })
         }
         "price_highest" => {
-            let res: StdResult<Vec<QueryOfferingsResult>> = OFFERINGS
-                .range(deps.storage, None, None, Order::Ascending)
-                .map(|kv_item| parse_offering(deps.api, kv_item))
-                .collect();
-
-            let mut res_sorted = res?.clone();
-
-            res_sorted.sort_by(|a, b| {
+            offerings_clone.sort_by(|a, b| {
                 if a.list_price.amount < b.list_price.amount {
                     Ordering::Greater
                 } else if a.list_price.amount == b.list_price.amount {
@@ -229,33 +248,68 @@ fn query_offerings(deps: Deps, sort_listing: &str) -> StdResult<OfferingsRespons
                 }
             });
 
+            let paged = Paged::new(&offerings_clone, size);
+            let (_, offerings_paginated) = paged.page(index).unwrap();
+
             Ok(OfferingsResponse {
-                offerings: res_sorted, // Placeholder
+                total: offerings_clone.len(),
+                size: size,
+                index: index,
+                offerings: offerings_paginated.to_vec(),
             })
         }
         "newest_listed" => {
-            let res: StdResult<Vec<QueryOfferingsResult>> = OFFERINGS
-                .range(deps.storage, None, None, Order::Descending)
-                .map(|kv_item| parse_offering(deps.api, kv_item))
-                .collect();
+            offerings_clone.sort_by(|a, b| {
+                let a_id: u128 = a.id.parse().unwrap();
+                let b_id: u128 = b.id.parse().unwrap();
+
+                if a_id < b_id {
+                    Ordering::Less
+                } else if a_id == b_id {
+                    Ordering::Equal
+                } else {
+                    Ordering::Greater
+                }
+            });
+
+            let paged = Paged::new(&offerings_clone, size);
+            let (_, offerings_paginated) = paged.page(index).unwrap();
 
             Ok(OfferingsResponse {
-                offerings: res?, // Placeholder
+                total: offerings_clone.len(),
+                size: size,
+                index: index,
+                offerings: offerings_paginated.to_vec(),
             })
         }
         "oldest_listed" => {
-            let res: StdResult<Vec<QueryOfferingsResult>> = OFFERINGS
-                .range(deps.storage, None, None, Order::Ascending)
-                .map(|kv_item| parse_offering(deps.api, kv_item))
-                .collect();
+            offerings_clone.sort_by(|a, b| {
+                let a_id: u128 = a.id.parse().unwrap();
+                let b_id: u128 = b.id.parse().unwrap();
+
+                if a_id < b_id {
+                    Ordering::Greater
+                } else if a_id == b_id {
+                    Ordering::Equal
+                } else {
+                    Ordering::Less
+                }
+            });
+
+            let paged = Paged::new(&offerings_clone, size);
+            let (_, offerings_paginated) = paged.page(index).unwrap();
 
             Ok(OfferingsResponse {
-                offerings: res?, // Placeholder
+                total: offerings_clone.len(),
+                size: size,
+                index: index,
+                offerings: offerings_paginated.to_vec(),
             })
         }
 
         _ => Err(StdError::NotFound {
-            kind: "Sort parameter not found!".to_string(),
+            kind: "Sort must be one of (price_lowest, price_highest, newest_listed, oldest_listed)"
+                .to_string(),
         }),
     }
 }

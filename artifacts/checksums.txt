@@ -1,1 +1,1 @@
-0797b1b2d530f12dc925daea671099d07ab596ce82a1c0a4c77c078fc22616b0  cw_marketplace-aarch64.wasm
+37dd6af8841dc73e4d75d80cef4cefd79ac7b204c0a4758b59b5fcbcb925a897  cw_marketplace-aarch64.wasm

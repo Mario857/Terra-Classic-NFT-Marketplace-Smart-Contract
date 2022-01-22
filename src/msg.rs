@@ -1,3 +1,4 @@
+use cosmwasm_std::Uint128;
 use cw20::{Cw20Coin, Cw20ReceiveMsg};
 use cw721::Cw721ReceiveMsg;
 use schemars::JsonSchema;
@@ -34,6 +35,8 @@ pub struct BuyNft {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     GetOfferings {
-        sort_listing: String
+        sort_listing: String,
+        index: Uint128,
+        size: Uint128,
     },
 }

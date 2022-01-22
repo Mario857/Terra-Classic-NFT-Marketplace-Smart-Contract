@@ -11,9 +11,21 @@
         "get_offerings": {
           "type": "object",
           "required": [
+            "page",
+            "per_page",
             "sort_listing"
           ],
           "properties": {
+            "page": {
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0.0
+            },
+            "per_page": {
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0.0
+            },
             "sort_listing": {
               "type": "string"
             }
