@@ -10,7 +10,7 @@ Testnet
 
 | Contract        | Address                                       |
 |:----------------|:----------------------------------------------|
-| marketplace     | terra1lj8hv9jlg58c57g2wv596ra5z2smjwe666a0gv  |
+| marketplace     | terra1708j7n4l2909z2afex09727mp22zl0ur6gtrn9  |
 
 ### Sell CW721 Token
 
