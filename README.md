@@ -20,7 +20,7 @@ Puts an NFT token up for sale.
 
 ```shell
 # Execute send_nft action to put token up for sale for specified list_price on the marketplace
-terrad tx wasm execute terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5 '{
+terrad tx wasm execute <CW721_CONTRACT_ADDR> '{
   "send_nft": {
     "contract": "<MARKETPLACE_CONTRACT_ADDR>",
     "token_id": "<TOKEN_ID>",
@@ -52,7 +52,7 @@ Buys an NFT token, transferring funds to the seller and the token to the buyer.
 
 ```shell
 # Execute send action to buy token with the specified offering_id from the marketplace
-terrad tx wasm execute terra1ulgw0td86nvs4wtpsc80thv6xelk76ut7a7apj '{
+terrad tx wasm execute <CW_20_CONTRACT_ADDR> '{
   "send": {
     "contract": "<MARKETPLACE_CONTRACT_ADDR>",
     "amount": "<INSERT_AMOUNT>",
