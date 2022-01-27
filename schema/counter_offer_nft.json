@@ -1,12 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "BuyNft",
+  "title": "CounterOfferNft",
   "type": "object",
   "required": [
-    "offering_id"
+    "action",
+    "exchange_id"
   ],
   "properties": {
-    "offering_id": {
+    "action": {
+      "type": "string"
+    },
+    "exchange_id": {
       "type": "string"
     }
   }

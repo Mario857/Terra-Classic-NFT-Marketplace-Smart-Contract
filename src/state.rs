@@ -1,69 +1,81 @@
-use cw20::Cw20Coin;
+use cosmwasm_std::{CanonicalAddr, StdResult, Storage, Timestamp};
+use cw_storage_plus::{Item, Map};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{CanonicalAddr, StdResult, Storage, Timestamp};
-use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
-
 use crate::package::ContractInfoResponse;
 
-pub static CONFIG_KEY: &str = "config";
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct Offering {
-    pub token_id: String,
+pub struct Exchange {
+    pub exchanger_token_contract_addr: CanonicalAddr, // address of exchangers CW721 token
 
-    pub contract_addr: CanonicalAddr,
+    pub receiver_token_contract_addr: CanonicalAddr, // address of receiver CW721 token
 
-    pub seller: CanonicalAddr,
+    pub exchanger: CanonicalAddr, // person who initiates exchange
 
-    pub list_price: Cw20Coin,
+    pub exchanger_token_id: String, // token_id of exchange initiator
 
-    pub listing_time: Timestamp,
+    pub receiver: CanonicalAddr, // person who is can accept exchange
+
+    pub receiver_token_id: String, // address receiver of token required by exchange initiator
+
+    pub exchange_time: Timestamp, // exchange time
 }
 
-pub const OFFERINGS: Map<&str, Offering> = Map::new("offerings");
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct CounterOffer {
+    pub exchange_id: String, // exchange if token_id is linked to
 
-pub const OFFERINGS_COUNT: Item<u64> = Item::new("num_offerings");
+    pub counter_offer_time: Timestamp, // counter offer time
+
+    pub sender: String,
+
+    pub contract_addr: String,
+
+    pub token_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct Config {
+    pub owner: CanonicalAddr,
+}
+
+pub const CONFIG: Item<Config> = Item::new("config");
+
+pub const EXCHANGES: Map<&str, Exchange> = Map::new("exchanges"); // exchanges created by exchanger (initiator)
+
+pub const EXCHANGES_COUNT: Item<u64> = Item::new("num_exchanges"); 
+
+pub const COUNTER_OFFERS: Map<&str, CounterOffer> = Map::new("counter_offers"); 
+
+pub const COMPLETED_EXCHANGES: Map<&str, Exchange> = Map::new("completed_exchanges");
+
+pub const COMPLETED_EXCHANGES_COUNT: Item<u64> = Item::new("num_completed_exchanges"); 
 
 pub const CONTRACT_INFO: Item<ContractInfoResponse> = Item::new("marketplace_info");
 
-pub fn num_offerings(storage: &dyn Storage) -> StdResult<u64> {
-    Ok(OFFERINGS_COUNT.may_load(storage)?.unwrap_or_default())
+pub fn num_exchanges(storage: &dyn Storage) -> StdResult<u64> {
+    Ok(EXCHANGES_COUNT.may_load(storage)?.unwrap_or_default())
 }
 
-pub fn increment_offerings(storage: &mut dyn Storage) -> StdResult<u64> {
-    let val = num_offerings(storage)? + 1;
-    
-    OFFERINGS_COUNT.save(storage, &val)?;
+pub fn increment_exchanges(storage: &mut dyn Storage) -> StdResult<u64> {
+    let val = num_exchanges(storage)? + 1;
+
+    EXCHANGES_COUNT.save(storage, &val)?;
 
     Ok(val)
 }
 
-pub struct OfferingIndexes<'a> {
-    pub seller: MultiIndex<'a, (Vec<u8>, Vec<u8>), Offering>,
-    pub contract: MultiIndex<'a, (Vec<u8>, Vec<u8>), Offering>,
+pub fn num_completed_exchanges(storage: &dyn Storage) -> StdResult<u64> {
+    Ok(COMPLETED_EXCHANGES_COUNT
+        .may_load(storage)?
+        .unwrap_or_default())
 }
 
-impl<'a> IndexList<Offering> for OfferingIndexes<'a> {
-    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Offering>> + '_> {
-        let v: Vec<&dyn Index<Offering>> = vec![&self.seller, &self.contract];
-        Box::new(v.into_iter())
-    }
-}
+pub fn increment_completed_exchanges(storage: &mut dyn Storage) -> StdResult<u64> {
+    let val = num_completed_exchanges(storage)? + 1;
 
-pub fn offerings<'a>() -> IndexedMap<'a, &'a str, Offering, OfferingIndexes<'a>> {
-    let indexes = OfferingIndexes {
-        seller: MultiIndex::new(
-            |o, k| (o.seller.to_vec(), k),
-            "offerings",
-            "offerings__seller",
-        ),
-        contract: MultiIndex::new(
-            |o, k| (o.contract_addr.to_vec(), k),
-            "offerings",
-            "offerings__contract",
-        ),
-    };
-    IndexedMap::new("offerings", indexes)
+    COMPLETED_EXCHANGES_COUNT.save(storage, &val)?;
+
+    Ok(val)
 }

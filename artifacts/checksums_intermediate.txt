@@ -1,1 +1,2 @@
-495a2fd4353d4f869f09fe258956755144c93d26bbb3abab717b2a4b8980af6a  ./target/wasm32-unknown-unknown/release/cw_marketplace.wasm
+0deb47b6302ee00f4b82882ec06b20f885d94b81e91fa001eba73beb2a12bf8e  ./target/wasm32-unknown-unknown/release/cw_marketplace.wasm
+9c0dc6ddbcd7c3d4fdb29d6bcd282a1a9e8323becfa6e091fcdc468ae5ee9fe4  ./target/wasm32-unknown-unknown/release/cw_one2one_nft.wasm

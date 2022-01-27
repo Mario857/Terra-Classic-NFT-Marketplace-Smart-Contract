@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExchangeNft",
+  "type": "object",
+  "required": [
+    "action",
+    "receiver",
+    "receiver_token_contract_address",
+    "receiver_token_id"
+  ],
+  "properties": {
+    "action": {
+      "type": "string"
+    },
+    "receiver": {
+      "type": "string"
+    },
+    "receiver_token_contract_address": {
+      "type": "string"
+    },
+    "receiver_token_id": {
+      "type": "string"
+    }
+  }
+}
