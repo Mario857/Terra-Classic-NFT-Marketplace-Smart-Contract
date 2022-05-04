@@ -215,103 +215,61 @@ fn query_offerings(
         });
     }
 
-    match sort_listing {
+    offerings_clone.sort_by(|a, b| match sort_listing {
         "price_lowest" => {
-            offerings_clone.sort_by(|a, b| {
-                if a.list_price.amount < b.list_price.amount {
-                    Ordering::Less
-                } else if a.list_price.amount == b.list_price.amount {
-                    Ordering::Equal
-                } else {
-                    Ordering::Greater
-                }
-            });
-
-            let paged = Paged::new(&offerings_clone, size);
-            let (_, offerings_paginated) = paged.page(index).unwrap();
-
-            Ok(OfferingsResponse {
-                total: offerings_clone.len(),
-                size: size,
-                index: index,
-                offerings: offerings_paginated.to_vec(),
-            })
+            if a.list_price.amount < b.list_price.amount {
+                return Ordering::Less;
+            }
+            if a.list_price.amount == b.list_price.amount {
+                return Ordering::Equal;
+            }
+            return Ordering::Greater;
         }
         "price_highest" => {
-            offerings_clone.sort_by(|a, b| {
-                if a.list_price.amount < b.list_price.amount {
-                    Ordering::Greater
-                } else if a.list_price.amount == b.list_price.amount {
-                    Ordering::Equal
-                } else {
-                    Ordering::Less
-                }
-            });
-
-            let paged = Paged::new(&offerings_clone, size);
-            let (_, offerings_paginated) = paged.page(index).unwrap();
-
-            Ok(OfferingsResponse {
-                total: offerings_clone.len(),
-                size: size,
-                index: index,
-                offerings: offerings_paginated.to_vec(),
-            })
+            if a.list_price.amount < b.list_price.amount {
+                return Ordering::Greater;
+            }
+            if a.list_price.amount == b.list_price.amount {
+                return Ordering::Equal;
+            }
+            return Ordering::Less;
         }
         "newest_listed" => {
-            offerings_clone.sort_by(|a, b| {
-                let a_id: u128 = a.id.parse().unwrap();
-                let b_id: u128 = b.id.parse().unwrap();
+            let a_id: u128 = a.id.parse().unwrap();
+            let b_id: u128 = b.id.parse().unwrap();
 
-                if a_id < b_id {
-                    Ordering::Less
-                } else if a_id == b_id {
-                    Ordering::Equal
-                } else {
-                    Ordering::Greater
-                }
-            });
-
-            let paged = Paged::new(&offerings_clone, size);
-            let (_, offerings_paginated) = paged.page(index).unwrap();
-
-            Ok(OfferingsResponse {
-                total: offerings_clone.len(),
-                size: size,
-                index: index,
-                offerings: offerings_paginated.to_vec(),
-            })
+            if a_id < b_id {
+                return Ordering::Less;
+            }
+            if a_id == b_id {
+                return Ordering::Equal;
+            }
+            return Ordering::Greater;
         }
         "oldest_listed" => {
-            offerings_clone.sort_by(|a, b| {
-                let a_id: u128 = a.id.parse().unwrap();
-                let b_id: u128 = b.id.parse().unwrap();
+            let a_id: u128 = a.id.parse().unwrap();
+            let b_id: u128 = b.id.parse().unwrap();
 
-                if a_id < b_id {
-                    Ordering::Greater
-                } else if a_id == b_id {
-                    Ordering::Equal
-                } else {
-                    Ordering::Less
-                }
-            });
-
-            let paged = Paged::new(&offerings_clone, size);
-            let (_, offerings_paginated) = paged.page(index).unwrap();
-
-            Ok(OfferingsResponse {
-                total: offerings_clone.len(),
-                size: size,
-                index: index,
-                offerings: offerings_paginated.to_vec(),
-            })
+            if a_id < b_id {
+                return Ordering::Greater;
+            }
+            if a_id == b_id {
+                return Ordering::Equal;
+            }
+            return Ordering::Less;
         }
+        _ => Ordering::Equal,
+    });
 
-        _ => Err(StdError::NotFound {
-            kind: "Sort must be one of (price_lowest, price_highest, newest_listed, oldest_listed)"
-                .to_string(),
-        }),
-    }
+    let paged = Paged::new(&offerings_clone, size);
+    let (_, offerings_paginated) = paged.page(index).unwrap();
+
+    Ok(OfferingsResponse {
+        total: offerings_clone.len(),
+        size: size,
+        index: index,
+        offerings: offerings_paginated.to_vec(),
+    })
 }
 
 fn parse_offering(
